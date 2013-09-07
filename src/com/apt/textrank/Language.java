@@ -72,12 +72,23 @@ public class Language {
         return tagger.tag(tokenList);
     }
     
+    /**
+     * Stem token.
+     * @param token
+     * @return 
+     */
     public String stem(String token) {
         stemmer.setCurrent(token);
         stemmer.stem();
         return stemmer.getCurrent().toUpperCase();
     }
     
+    /**
+     * Get identification key.
+     * @param token
+     * @param tag
+     * @return 
+     */
     public String getKey(String token, String tag) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(tag);
@@ -88,6 +99,11 @@ public class Language {
         return stringBuilder.toString();
     }
     
+    /**
+     * Is noun or adjective.
+     * @param pos
+     * @return 
+     */
     public boolean isRelevant(String pos) {
         return pos.equals("NC") || pos.equals("AQ");
     }
