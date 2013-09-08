@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.math.stat.descriptive.SummaryStatistics;
 
 /**
  * @project textrank
@@ -18,6 +19,7 @@ public class TextRank {
     private String text;
     private Language language;
     private List<Sentence> sentences;
+    private SummaryStatistics statistics;
 
     /* Getters and Setters */
     public List<Sentence> getSentences() {
@@ -35,6 +37,7 @@ public class TextRank {
         this.text = text;
         language = new Language(pathResources);
         sentences = new ArrayList<Sentence>();
+        statistics = new SummaryStatistics();
     }
 
     /**
@@ -175,14 +178,17 @@ public class TextRank {
 
     /**
      * Get keywords.
+     *
      * @param pr
      * @param graph
-     * @return 
+     * @return
      */
     public List<Keyword> getKeywords(double[] pr, Graph graph) {
         List<Keyword> keywords = new ArrayList<Keyword>();
+        statistics.clear();
         // First, keywords contain the list of keys for sorting.
         for (int i = 0; i < pr.length; i++) {
+            statistics.addValue(pr[i]);
             for (Node node : graph.getNodes().values()) {
                 if (node.getId() == i) {
                     node.setRank(pr[i]);
@@ -193,11 +199,13 @@ public class TextRank {
         }
         Collections.sort(keywords);
         // Second, create a list of string keys.
+        double thr = statistics.getMean() - (statistics.getStandardDeviation() / statistics.getN());
+        System.out.println("DGB THR " + thr);
         List<String> keys = new ArrayList<String>();
         for (Keyword keyword : keywords) {
 //            System.out.println("DBG KEYWORD " + keyword.getValue() + " " + keyword.getRank());
             // TODO: Determine this value.
-            if (keyword.getRank() > 1.2) {
+            if (keyword.getRank() > thr) {
                 keys.add(keyword.getValue());
             }
         }
@@ -205,11 +213,23 @@ public class TextRank {
         keywords.clear();
         for (Sentence sentence : sentences) {
             List<Keyword> kl = sentence.getCollocations(keys);
-            for (Keyword k : kl) {
-                keywords.add(k);
-            }
+            keywords.addAll(kl);
         }
 //        System.out.println("DBG KEYS " + keys);
-        return keywords;
+        // Delete equals elements
+        List<Keyword> ans = new ArrayList<Keyword>();
+        for (int i = 0; i < keywords.size(); i++) {
+            boolean eq = false;
+            for (int j = i + 1; j < keywords.size(); j++) {
+                if (keywords.get(i).getValue().trim().equals(keywords.get(j).getValue().trim())) {
+                    eq = true;
+                    break;
+                }
+            }
+            if (!eq) {
+                ans.add(keywords.get(i));
+            }
+        }
+        return ans;
     }
 }
