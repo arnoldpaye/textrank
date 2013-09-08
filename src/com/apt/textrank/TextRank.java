@@ -1,5 +1,7 @@
 package com.apt.textrank;
 
+import com.apt.textrank.util.Util;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,6 +20,7 @@ public class TextRank {
     /* Members */
     private String text;
     private Language language;
+    private String pathResources;
     private List<Sentence> sentences;
     private SummaryStatistics statistics;
 
@@ -35,6 +38,7 @@ public class TextRank {
      */
     public TextRank(String text, String pathResources) throws IOException {
         this.text = text;
+        this.pathResources = pathResources;
         language = new Language(pathResources);
         sentences = new ArrayList<Sentence>();
         statistics = new SummaryStatistics();
@@ -57,7 +61,8 @@ public class TextRank {
             String[] keyList = new String[tokenList.length];
             for (int i = 0; i < tokenList.length; i++) {
                 keyList[i] = language.getKey(tokenList[i], tagList[i]);
-                if (language.isRelevant(tagList[i].trim()) && !tokenList[i].trim().isEmpty()) {
+                // TODO: Change this, dont hardcode
+                if (language.isRelevant(tagList[i].trim()) && !tokenList[i].trim().isEmpty() && !tokenList[i].equals("(") && !tokenList[i].equals(")")) {
                     if (!graph.getNodes().containsKey(keyList[i])) {
                         currentNode = new Node(tokenList[i], keyList[i], idCont++);
                         graph.getNodes().put(keyList[i], currentNode);
@@ -183,8 +188,10 @@ public class TextRank {
      * @param graph
      * @return
      */
-    public List<Keyword> getKeywords(double[] pr, Graph graph) {
+    public List<Keyword> getKeywords(double[] pr, Graph graph) throws FileNotFoundException, IOException {
         List<Keyword> keywords = new ArrayList<Keyword>();
+        // Load Dictionary
+        List<String> dictionary = Util.getDictionary(pathResources);
         statistics.clear();
         // First, keywords contain the list of keys for sorting.
         for (int i = 0; i < pr.length; i++) {
@@ -200,8 +207,10 @@ public class TextRank {
         Collections.sort(keywords);
         // Second, create a list of string keys.
         double thr = statistics.getMean() - (statistics.getStandardDeviation() / statistics.getN());
+        //double thr = statistics.getMean();
         System.out.println("DGB THR " + thr);
         List<String> keys = new ArrayList<String>();
+        List<Keyword> keywordHandleList = new ArrayList<Keyword>();
         for (Keyword keyword : keywords) {
 //            System.out.println("DBG KEYWORD " + keyword.getValue() + " " + keyword.getRank());
             // TODO: Determine this value.
@@ -210,26 +219,29 @@ public class TextRank {
             }
         }
         // Iterate sentences for the collocations
-        keywords.clear();
         for (Sentence sentence : sentences) {
+//            System.out.println("DBG SENTENCE " + sentence.getText());
             List<Keyword> kl = sentence.getCollocations(keys);
-            keywords.addAll(kl);
+            
+            keywordHandleList.addAll(kl);
         }
 //        System.out.println("DBG KEYS " + keys);
         // Delete equals elements
         List<Keyword> ans = new ArrayList<Keyword>();
-        for (int i = 0; i < keywords.size(); i++) {
+        for (int i = 0; i < keywordHandleList.size(); i++) {
+            System.out.println("DBG " + keywordHandleList.get(i).getValue());
             boolean eq = false;
-            for (int j = i + 1; j < keywords.size(); j++) {
-                if (keywords.get(i).getValue().trim().equals(keywords.get(j).getValue().trim())) {
+            for (int j = i + 1; j < keywordHandleList.size(); j++) {
+                if (keywordHandleList.get(i).getValue().trim().equals(keywordHandleList.get(j).getValue().trim())) {
                     eq = true;
                     break;
                 }
             }
-            if (!eq) {
-                ans.add(keywords.get(i));
+            if (!eq && dictionary.contains(keywordHandleList.get(i).getValue())) {
+                ans.add(keywordHandleList.get(i));
             }
         }
+        
         return ans;
     }
 }

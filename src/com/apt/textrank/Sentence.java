@@ -67,6 +67,8 @@ public class Sentence {
         while (i < tokens.length) {
             boolean sw = false;
             if (keyList.contains(keys[i])) {
+                // TODO: Correct? One word
+                keywords.add(new Keyword(tokens[i].toUpperCase(), 0));
                 StringBuilder stringBuilder = new StringBuilder(tokens[i].toUpperCase());
                 int px = i + 1;
                 int numberOfTokes = 1;
