@@ -68,24 +68,24 @@ public class Sentence {
             boolean sw = false;
             if (keyList.contains(keys[i])) {
                 // TODO: Correct? One word
-                keywords.add(new Keyword(tokens[i].toUpperCase(), 0));
+                //keywords.add(new Keyword(tokens[i].toUpperCase(), 0));
                 StringBuilder stringBuilder = new StringBuilder(tokens[i].toUpperCase());
                 int px = i + 1;
-                int numberOfTokes = 1;
+                int numberOfTokens = 1;
                 while (true) {
                     if (keyList.contains(keys[px]) || tags[px].equals("NC") && tokens[px].trim().length() > 1) {
                         stringBuilder.append(" ").append(tokens[px].toUpperCase());
                         sw = true;
-                        numberOfTokes++;
+                        numberOfTokens++;
                         px++;
                     } else if (((tags[px].equals("SPS") && tokens[px].trim().length() > 1) || tags[px].equals("CC"))) {
                         String aux = " " + tokens[px].toUpperCase();
-                        numberOfTokes++;
+                        numberOfTokens++;
                         px++;
                         if (keyList.contains(keys[px]) || tags[px].equals("NC") && tokens[px].trim().length() > 1) {
                             stringBuilder.append(aux).append(" ").append(tokens[px].toUpperCase());
                             sw = true;
-                            numberOfTokes++;
+                            numberOfTokens++;
                             px++;
                         } else {
                             break;
@@ -94,7 +94,7 @@ public class Sentence {
                         break;
                     }
                 }
-                if (sw && numberOfTokes < 5) {
+                if (sw && numberOfTokens <= 5) {
                     keywords.add(new Keyword(stringBuilder.toString(), 0));
                 }
             }

@@ -206,6 +206,7 @@ public class TextRank {
         }
         Collections.sort(keywords);
         // Second, create a list of string keys.
+        // TODO: Determine this value.
         double thr = statistics.getMean() - (statistics.getStandardDeviation() / statistics.getN());
         //double thr = statistics.getMean();
         System.out.println("DGB THR " + thr);
@@ -213,7 +214,6 @@ public class TextRank {
         List<Keyword> keywordHandleList = new ArrayList<Keyword>();
         for (Keyword keyword : keywords) {
 //            System.out.println("DBG KEYWORD " + keyword.getValue() + " " + keyword.getRank());
-            // TODO: Determine this value.
             if (keyword.getRank() > thr) {
                 keys.add(keyword.getValue());
             }
@@ -222,7 +222,7 @@ public class TextRank {
         for (Sentence sentence : sentences) {
 //            System.out.println("DBG SENTENCE " + sentence.getText());
             List<Keyword> kl = sentence.getCollocations(keys);
-            
+
             keywordHandleList.addAll(kl);
         }
 //        System.out.println("DBG KEYS " + keys);
@@ -237,11 +237,12 @@ public class TextRank {
                     break;
                 }
             }
-            if (!eq && dictionary.contains(keywordHandleList.get(i).getValue())) {
+            //if (!eq && dictionary.contains(keywordHandleList.get(i).getValue())) {
+            if (!eq) {
                 ans.add(keywordHandleList.get(i));
             }
         }
-        
+
         return ans;
     }
 }
