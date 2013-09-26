@@ -100,11 +100,29 @@ public class Language {
     }
     
     /**
+     * Is noun.
+     * @param pos
+     * @return 
+     */
+    public boolean isNoun(String pos) {
+        return pos.equals("NC") || pos.equals("NP");
+    }
+    
+    /**
+     * Is adjective.
+     * @param pos
+     * @return 
+     */
+    public boolean isAdjective(String pos) {
+        return pos.equals("AQ");
+    }
+    
+    /**
      * Is noun or adjective.
      * @param pos
      * @return 
      */
     public boolean isRelevant(String pos) {
-        return pos.equals("NC") || pos.equals("AQ");
+        return isNoun(pos) || isAdjective(pos);
     }
 }

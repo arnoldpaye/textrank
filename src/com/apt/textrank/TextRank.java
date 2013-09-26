@@ -190,8 +190,6 @@ public class TextRank {
      */
     public List<Keyword> getKeywords(double[] pr, Graph graph) throws FileNotFoundException, IOException {
         List<Keyword> keywords = new ArrayList<Keyword>();
-        // Load Dictionary
-        List<String> dictionary = Util.getDictionary(pathResources);
         statistics.clear();
         // First, keywords contain the list of keys for sorting.
         for (int i = 0; i < pr.length; i++) {
@@ -205,23 +203,38 @@ public class TextRank {
             }
         }
         Collections.sort(keywords);
+        for (Keyword keyword : keywords) {
+//            System.out.println("DBG " + keyword.getValue() + " " + keyword.getRank());
+        }
+        
+        
         // Second, create a list of string keys.
         // TODO: Determine this value.
-        double thr = statistics.getMean() - (statistics.getStandardDeviation() / statistics.getN());
+        double thr = (statistics.getMean() - (statistics.getStandardDeviation() / statistics.getN()));
         //double thr = statistics.getMean();
-        System.out.println("DGB THR " + thr);
+//        System.out.println("DGB THR " + thr);
         List<String> keys = new ArrayList<String>();
         List<Keyword> keywordHandleList = new ArrayList<Keyword>();
-        for (Keyword keyword : keywords) {
-//            System.out.println("DBG KEYWORD " + keyword.getValue() + " " + keyword.getRank());
-            if (keyword.getRank() > thr) {
-                keys.add(keyword.getValue());
-            }
+//        System.out.println("DBG SIZE " + keywords.size());
+        int lim = (int)(keywords.size() * 0.14);
+        System.out.println("DBG LIM " + lim);
+        
+//        for (Keyword keyword : keywords) {
+//            if (keyword.getRank() > thr) {
+//                keys.add(keyword.getValue());
+//            }
+//        }
+        for (int i = 0; i < lim; i++) {
+            keys.add(keywords.get(i).getValue());
+//            System.out.println("\t\t\t" + keywords.get(i).getValue());
         }
+        
+//        System.out.println("DBG SIZE " + keys.size());
+        
         // Iterate sentences for the collocations
         for (Sentence sentence : sentences) {
 //            System.out.println("DBG SENTENCE " + sentence.getText());
-            List<Keyword> kl = sentence.getCollocations(keys);
+            List<Keyword> kl = sentence.getCollocations(language, keys);
 
             keywordHandleList.addAll(kl);
         }
@@ -229,7 +242,7 @@ public class TextRank {
         // Delete equals elements
         List<Keyword> ans = new ArrayList<Keyword>();
         for (int i = 0; i < keywordHandleList.size(); i++) {
-            System.out.println("DBG " + keywordHandleList.get(i).getValue());
+//            System.out.println("DBG " + keywordHandleList.get(i).getValue());
             boolean eq = false;
             for (int j = i + 1; j < keywordHandleList.size(); j++) {
                 if (keywordHandleList.get(i).getValue().trim().equals(keywordHandleList.get(j).getValue().trim())) {

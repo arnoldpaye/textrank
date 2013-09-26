@@ -56,45 +56,38 @@ public class Sentence {
         this.text = text;
     }
 
-    /**
-     * Get collocations.
-     * @param keyList
-     * @return 
-     */
-    public List<Keyword> getCollocations(List<String> keyList) {
+    public List<Keyword> getCollocations(Language language, List<String> keyList) {
         List<Keyword> keywords = new ArrayList<Keyword>();
         int i = 0;
         while (i < tokens.length) {
-            boolean sw = false;
-            if (keyList.contains(keys[i])) {
-                // TODO: Correct? One word
-                //keywords.add(new Keyword(tokens[i].toUpperCase(), 0));
-                StringBuilder stringBuilder = new StringBuilder(tokens[i].toUpperCase());
-                int px = i + 1;
+            if (keyList.contains(keys[i]) && language.isNoun(tags[i]) && tokens[i].length() > 4) {
                 int numberOfTokens = 1;
-                while (true) {
-                    if (keyList.contains(keys[px]) || tags[px].equals("NC") && tokens[px].trim().length() > 1) {
-                        stringBuilder.append(" ").append(tokens[px].toUpperCase());
-                        sw = true;
+                StringBuilder stringBuilder = new StringBuilder(tokens[i].toUpperCase());
+                int px1 = -1;
+                if (i + 1 < tokens.length) {
+                    if (language.isAdjective(tags[i + 1]) && tokens[i + 1].length() > 4) {
+                        stringBuilder.append(" ").append(tokens[i + 1].toUpperCase());
+                        px1 = i + 2;
                         numberOfTokens++;
-                        px++;
-                    } else if (((tags[px].equals("SPS") && tokens[px].trim().length() > 1) || tags[px].equals("CC"))) {
-                        String aux = " " + tokens[px].toUpperCase();
-                        numberOfTokens++;
-                        px++;
-                        if (keyList.contains(keys[px]) || tags[px].equals("NC") && tokens[px].trim().length() > 1) {
-                            stringBuilder.append(aux).append(" ").append(tokens[px].toUpperCase());
-                            sw = true;
-                            numberOfTokens++;
-                            px++;
-                        } else {
-                            break;
-                        }
                     } else {
-                        break;
+                        px1 = i + 1;
                     }
                 }
-                if (sw && numberOfTokens <= 5) {
+                if (px1 != -1 && (tags[px1].equals("SPS") || tags[px1].equals("CC"))) {
+                    int px2 = -1;
+                    if (px1 + 1 < tokens.length && (keyList.contains(keys[px1 + 1]) || language.isNoun(tags[px1 + 1]) && tokens[px1 + 1].length() > 4)) {
+                        numberOfTokens++;
+                        numberOfTokens++;
+                        stringBuilder.append(" ").append(tokens[px1].toUpperCase());
+                        stringBuilder.append(" ").append(tokens[px1 + 1].toUpperCase());
+                        px2 = px1 + 1;
+                        if (px2 + 1 < tokens.length && language.isAdjective(tags[px2 + 1]) && tokens[px2 + 1].length() > 4) {
+                            numberOfTokens++;
+                            stringBuilder.append(" ").append(tokens[px2 + 1].toUpperCase());
+                        }
+                    }
+                }
+                if (numberOfTokens > 1) {
                     keywords.add(new Keyword(stringBuilder.toString(), 0));
                 }
             }
