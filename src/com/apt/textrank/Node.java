@@ -1,35 +1,29 @@
 package com.apt.textrank;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @project textrank
  * @package com.apt.textrank
  * @class Node.java (UTF-8)
- * @date 06/09/2013
+ * @date 04/10/2013
  * @author Arnold Paye
  */
 public class Node {
 
     /* Members */
-    private String value;
     private String key;
-    private int id;
     private double rank;
-    private Set<Node> edges;
+    private List<Edge> edges;
 
-    /* Getters and Setters */
-    public String getValue() {
-        return value;
-    }
-
+    /*Getters and setters*/
     public String getKey() {
         return key;
     }
 
-    public int getId() {
-        return id;
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public double getRank() {
@@ -40,19 +34,22 @@ public class Node {
         this.rank = rank;
     }
 
-    public Set<Node> getEdges() {
+    public List<Edge> getEdges() {
         return edges;
     }
 
-    /**
-     * Constructor with three parameters.
-     *
-     * @param value
-     */
-    public Node(String value, String key, int id) {
-        this.value = value;
+    public void setEdges(List<Edge> edges) {
+        this.edges = edges;
+    }
+    
+    public Node() {
+        this.key = "";
+        edges = new ArrayList<Edge>();
+    }
+    
+    public Node(String key) {
         this.key = key;
-        this.id = id;
-        this.edges = new HashSet<Node>();
+        this.rank = 1;
+        edges = new ArrayList<Edge>();
     }
 }
