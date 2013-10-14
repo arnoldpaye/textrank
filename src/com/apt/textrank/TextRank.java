@@ -118,21 +118,34 @@ public class TextRank {
             maxIterations--;
         }
     }
-    
+
     public List<Keyword> getKeywords(Graph graph) {
         List<Keyword> keywords = new ArrayList<Keyword>();
-        List<String> keys = new ArrayList<String>();
+//        List<String> keysOld = new ArrayList<String>();
+        Map<String, Double> keys = new HashMap<String, Double>();
+        
         for (Node node : graph.values()) {
             keywords.add(new Keyword(node.getKey(), node.getRank()));
         }
         Collections.sort(keywords);
-        int lim = (int)(keywords.size() * 0.10);
-        
+//        for (Keyword k : keywords) {
+//            System.out.println("DBG " + k.getValue() + " " + k.getRank());
+//        }
+
+        int lim = (int) (keywords.size() * 0.15);
+
         for (int i = 0; i < lim; i++) {
-            keys.add(keywords.get(i).getValue());
+//            keysOld.add(keywords.get(i).getValue());
+            keys.put(keywords.get(i).getValue(), keywords.get(i).getRank());
         }
-        keywords.clear();
+//        System.out.println("DBG SIZE1 " + keysOld.size());
+        System.out.println("DBG SIZE2 " + keys.size());
+        for (String key : keys.keySet()) {
+            System.out.println("DBG KEYS " + key + " " + keys.get(key));
+        }
         
+        keywords.clear();
+
         for (Sentence sentence : sentences) {
             List<Keyword> kl = sentence.getCollocations(language, keys);
 
@@ -153,9 +166,9 @@ public class TextRank {
                 ans.add(keywords.get(i));
             }
         }
+        Collections.sort(ans);
         return ans;
     }
-    
 //    public Graph buildGraph() {
 //        Graph graph = new Graph();
 //        Node lastNode = null;
