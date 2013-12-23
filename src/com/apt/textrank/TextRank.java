@@ -3,7 +3,6 @@ package com.apt.textrank;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,6 +23,7 @@ public class TextRank {
     private List<Sentence> sentences;
     private SummaryStatistics statistics;
     private Map<String, Integer> weights;
+    private static int WINDOWS_SIZE = 3;
 
     /* Getters and Setters */
     public List<Sentence> getSentences() {
@@ -49,16 +49,20 @@ public class TextRank {
         weights = new TreeMap<String, Integer>();
         String lastKey = "";
         String currentKey = "";
+        int lastPosition = -1;
         for (String sentence : language.splitParagraph(text)) {
             Sentence sent = new Sentence(sentence);
             String[] tokenArray = language.tokenizeSentence(sentence);
             String[] tagArray = language.tagTokens(tokenArray);
             String[] keyArray = new String[tokenArray.length];
+
             for (int i = 0; i < tokenArray.length; i++) {
                 keyArray[i] = language.getKey(tokenArray[i], tagArray[i]);
-                if (language.isRelevant(tagArray[i].trim()) && !tokenArray[i].trim().isEmpty() && !tokenArray[i].equals("(") && !tokenArray[i].equals(")")) {
+                System.out.println(">>> " + tokenArray[i] + " " + tagArray[i] + " " + keyArray[i]);
+                if (language.isRelevant(tagArray[i].trim()) && !tokenArray[i].trim().isEmpty() && tokenArray[i].trim().length() > 2 && !tokenArray[i].equals("(") && !tokenArray[i].equals(")")) {
                     currentKey = keyArray[i];
-                    if (!lastKey.isEmpty()) {
+                    if (!lastKey.isEmpty() && lastPosition != -1 && ((i - lastPosition) <= WINDOWS_SIZE)) {
+                        //System.out.println("KEYS >>>" + currentKey + " " + lastKey);
                         String combineKey = currentKey + '/' + lastKey;
                         String rcombineKey = lastKey + '/' + currentKey;
 //                        System.out.println("DBG COMBINE KEY " + combineKey);
@@ -71,12 +75,14 @@ public class TextRank {
                         }
                     }
                     lastKey = currentKey;
+                    lastPosition = i;
                 }
             }
             sent.setTokens(tokenArray);
             sent.setTags(tagArray);
             sent.setKeys(keyArray);
             sentences.add(sent);
+            lastPosition = -1;
         }
         for (String s : weights.keySet()) {
 //            System.out.println("DBG S " + s);
@@ -121,34 +127,32 @@ public class TextRank {
 
     public List<Keyword> getKeywords(Graph graph) {
         List<Keyword> keywords = new ArrayList<Keyword>();
-//        List<String> keysOld = new ArrayList<String>();
-        Map<String, Double> keys = new HashMap<String, Double>();
-        
+        Map<String, Double> keys = new TreeMap<String, Double>();
+
         for (Node node : graph.values()) {
             keywords.add(new Keyword(node.getKey(), node.getRank()));
         }
         Collections.sort(keywords);
-//        for (Keyword k : keywords) {
-//            System.out.println("DBG " + k.getValue() + " " + k.getRank());
-//        }
-
-        int lim = (int) (keywords.size() * 0.15);
+        System.out.println("DBG SIZE1 " + keywords.size());
+        for (Keyword k : keywords) {
+            System.out.println("DBG " + k.getValue() + " " + k.getRank());
+        }
+        //int lim = (int) (keywords.size() * 0.15);
+        int lim = keywords.size() / (int) (keywords.size() * 0.05);
 
         for (int i = 0; i < lim; i++) {
-//            keysOld.add(keywords.get(i).getValue());
             keys.put(keywords.get(i).getValue(), keywords.get(i).getRank());
         }
-//        System.out.println("DBG SIZE1 " + keysOld.size());
         System.out.println("DBG SIZE2 " + keys.size());
         for (String key : keys.keySet()) {
-            System.out.println("DBG KEYS " + key + " " + keys.get(key));
+            System.out.println("\tDBG KEYS " + key + " " + keys.get(key));
         }
-        
+
         keywords.clear();
 
         for (Sentence sentence : sentences) {
-            List<Keyword> kl = sentence.getCollocations(language, keys);
-
+            //List<Keyword> kl = sentence.getCollocations(language, keys);
+            List<Keyword> kl = sentence.getCollocations2(language, keys);
             keywords.addAll(kl);
         }
         // Delete equals elements
@@ -169,102 +173,4 @@ public class TextRank {
         Collections.sort(ans);
         return ans;
     }
-//    public Graph buildGraph() {
-//        Graph graph = new Graph();
-//        Node lastNode = null;
-//        Node currentNode = null;
-//        int idCont = 0;
-//        for (String sentence : language.splitParagraph(text)) {
-//            Sentence sent = new Sentence(sentence);
-//            String[] tokenList = language.tokenizeSentence(sentence);
-//            String[] tagList = language.tagTokens(tokenList);
-//            String[] keyList = new String[tokenList.length];
-//            for (int i = 0; i < tokenList.length; i++) {
-//                keyList[i] = language.getKey(tokenList[i], tagList[i]);
-//                // TODO: Change this, dont hardcode
-//                if (language.isRelevant(tagList[i].trim()) && !tokenList[i].trim().isEmpty() && !tokenList[i].equals("(") && !tokenList[i].equals(")")) {
-//                    if (!graph.getNodes().containsKey(keyList[i])) {
-//                        currentNode = new Node(tokenList[i], keyList[i], idCont++);
-//                        graph.getNodes().put(keyList[i], currentNode);
-//                    } else {
-//                        currentNode = graph.getNodes().get(keyList[i]);
-//                    }
-//                    if (lastNode != null) {
-//                        graph.getNodes().get(currentNode.getKey()).getEdges().add(lastNode);
-//                        graph.getNodes().get(lastNode.getKey()).getEdges().add(currentNode);
-//                    }
-//                    lastNode = currentNode;
-//                }
-//            }
-//            sent.setTokens(tokenList);
-//            sent.setTags(tagList);
-//            sent.setKeys(keyList);
-//            sentences.add(sent);
-//        }
-//        return graph;
-//    }
-    /**
-     * Get keywords.
-     *
-     * @param pr
-     * @param graph
-     * @return
-     */
-//    public List<Keyword> getKeywords(double[] pr, Graph graph) throws FileNotFoundException, IOException {
-//        List<Keyword> keywords = new ArrayList<Keyword>();
-//        List<String> keys = new ArrayList<String>();
-//        List<Keyword> keywordHandleList = new ArrayList<Keyword>();
-//        statistics.clear();
-//        Double limRank = pr[0];
-//        // First, keywords contain the list of keys for sorting.
-//        for (int i = 0; i < pr.length; i++) {
-//            statistics.addValue(pr[i]);
-//            for (Node node : graph.getNodes().values()) {
-//                if (node.getId() == i) {
-//                    node.setRank(pr[i]);
-//                    keywords.add(new Keyword(node.getKey(), node.getRank()));
-//                    if (Math.abs(pr[i] - limRank) < 0.005 && (node.getKey().startsWith("NC") || node.getKey().startsWith("NP"))) {
-//                        keywordHandleList.add(new Keyword(node.getValue().toUpperCase(), 0));
-//                    }
-//                    break;
-//                }
-//            }
-//        }
-//        Collections.sort(keywords);
-////        System.out.println("DBG SIZE " + keywords.size());
-//        int lim = (int)(keywords.size() * 0.15);
-//        System.out.println("DBG LIM " + lim);
-//        
-//        for (int i = 0; i < lim; i++) {
-//            keys.add(keywords.get(i).getValue());
-////            System.out.println("\t\t\t" + keywords.get(i).getValue());
-//        }
-//        
-////        System.out.println("DBG SIZE " + keys.size());
-//        
-//        // Iterate sentences for the collocations
-//        for (Sentence sentence : sentences) {
-////            System.out.println("DBG SENTENCE " + sentence.getText());
-//            List<Keyword> kl = sentence.getCollocations(language, keys);
-//
-//            keywordHandleList.addAll(kl);
-//        }
-////        System.out.println("DBG KEYS " + keys);
-//        // Delete equals elements
-//        List<Keyword> ans = new ArrayList<Keyword>();
-//        for (int i = 0; i < keywordHandleList.size(); i++) {
-////            System.out.println("DBG " + keywordHandleList.get(i).getValue());
-//            boolean eq = false;
-//            for (int j = i + 1; j < keywordHandleList.size(); j++) {
-//                if (keywordHandleList.get(i).getValue().trim().equals(keywordHandleList.get(j).getValue().trim())) {
-//                    eq = true;
-//                    break;
-//                }
-//            }
-//            if (!eq) {
-//                ans.add(keywordHandleList.get(i));
-//            }
-//        }
-//        return ans;
-//    }
 }

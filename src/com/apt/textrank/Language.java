@@ -2,6 +2,7 @@ package com.apt.textrank;
 
 import java.io.File;
 import java.io.IOException;
+import opennlp.maxent.Main;
 import opennlp.tools.lang.spanish.PosTagger;
 import opennlp.tools.lang.spanish.SentenceDetector;
 import opennlp.tools.lang.spanish.Tokenizer;
@@ -15,17 +16,18 @@ import org.tartarus.snowball.ext.spanishStemmer;
  * @author Arnold Paye
  */
 public class Language {
-    
+
     /* Members */
     public static SentenceDetector splitter;
     public static Tokenizer tokenizer;
     public static PosTagger tagger;
     public static spanishStemmer stemmer;
-    
+
     /**
      * Load resources.
+     *
      * @param pathResources
-     * @throws IOException 
+     * @throws IOException
      */
     private void loadResources(String pathResources) throws IOException {
         splitter = new SentenceDetector((new File(pathResources, "SpanishSent.bin.gz")).getPath());
@@ -36,58 +38,64 @@ public class Language {
 
     /**
      * Constructor with a parameter.
+     *
      * @param pathResources
-     * @throws IOException 
+     * @throws IOException
      */
     public Language(String pathResources) throws IOException {
         if (splitter == null || tokenizer == null || tagger == null || stemmer == null) {
             loadResources(pathResources);
         }
     }
-    
+
     /**
      * Split text into sentences.
+     *
      * @param text
-     * @return 
+     * @return
      */
     public String[] splitParagraph(String text) {
         return splitter.sentDetect(text);
     }
-    
+
     /**
      * Tokenize sentence.
+     *
      * @param sentence
-     * @return 
+     * @return
      */
     public String[] tokenizeSentence(String sentence) {
         return tokenizer.tokenize(sentence);
     }
-    
+
     /**
      * Tag token list with a part-of-speech.
+     *
      * @param tokenList
-     * @return 
+     * @return
      */
     public String[] tagTokens(String[] tokenList) {
         return tagger.tag(tokenList);
     }
-    
+
     /**
      * Stem token.
+     *
      * @param token
-     * @return 
+     * @return
      */
     public String stem(String token) {
         stemmer.setCurrent(token);
         stemmer.stem();
         return stemmer.getCurrent().toUpperCase();
     }
-    
+
     /**
      * Get identification key.
+     *
      * @param token
      * @param tag
-     * @return 
+     * @return
      */
     public String getKey(String token, String tag) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -98,31 +106,58 @@ public class Language {
         stringBuilder.append(stemmer.getCurrent().toUpperCase());
         return stringBuilder.toString();
     }
-    
+
     /**
      * Is noun.
+     *
      * @param pos
-     * @return 
+     * @return
      */
     public boolean isNoun(String pos) {
         return pos.equals("NC") || pos.equals("NP");
     }
-    
+
     /**
      * Is adjective.
+     *
      * @param pos
-     * @return 
+     * @return
      */
     public boolean isAdjective(String pos) {
         return pos.equals("AQ");
     }
-    
+
+    /**
+     * Is conjuction.
+     *
+     * @param pos
+     * @return
+     */
+    public boolean isConjuction(String pos) {
+        return pos.equals("SPS") || pos.equals("CC");
+    }
+
     /**
      * Is noun or adjective.
+     *
      * @param pos
-     * @return 
+     * @return
      */
     public boolean isRelevant(String pos) {
         return isNoun(pos) || isAdjective(pos);
+    }
+
+    /**
+     * Is plural
+     *
+     * @param word
+     * @return
+     */
+    public boolean isPlural(String word) {
+        if (word.toLowerCase().endsWith("s")) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

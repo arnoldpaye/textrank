@@ -57,6 +57,51 @@ public class Sentence {
         this.text = text;
     }
 
+    public List<Keyword> getCollocations2(Language language, Map<String, Double> keyList) {
+        List<Keyword> keywords = new ArrayList<Keyword>();
+        int i = 0;
+        while (i < tokens.length) {
+            int numberOfTokens = 0;
+            int numberOfKeywords = 0;
+            double cumulativeRank = 0;
+            if (language.isNoun(tags[i]) && keyList.containsKey(keys[i]) && !language.isPlural(tokens[i])) {
+                numberOfTokens++;
+                numberOfKeywords++;
+                cumulativeRank += keyList.get(keys[i]);
+                StringBuilder sb = new StringBuilder(tokens[i].toUpperCase());
+                int p = i + 1;
+                if (p < tokens.length && (language.isAdjective(tags[p]) || language.isNoun(tags[p])) && keyList.containsKey(keys[p])) {
+                    sb.append(" ").append(tokens[p].toUpperCase());
+                    numberOfTokens++;
+                    numberOfKeywords++;
+                    cumulativeRank += keyList.get(keys[p]);
+                    p++;
+                }
+                if (p < tokens.length && language.isConjuction(tags[p])) {
+                    if (p + 1 < tokens.length && language.isNoun(tags[p + 1]) && keyList.containsKey(keys[p + 1]) && !keys[p+1].equals(keys[i])) {
+                        sb.append(" ").append(tokens[p].toUpperCase()).append(" ").append(tokens[p + 1].toUpperCase());
+                        numberOfTokens++;
+                        numberOfTokens++;
+                        numberOfKeywords++;
+                        cumulativeRank += keyList.get(keys[p + 1]);
+                        p += 2;
+                    }
+                    if (p < tokens.length && language.isAdjective(tags[p]) && keyList.containsKey(keys[p])) {
+                        sb.append(" ").append(tokens[p].toUpperCase());
+                        numberOfTokens++;
+                        numberOfKeywords++;
+                        cumulativeRank += keyList.get(keys[p]);
+                    }
+                }
+                if (numberOfTokens > 1) {
+                    keywords.add(new Keyword(sb.toString(), cumulativeRank / numberOfKeywords));
+                }
+            }
+            i++;
+        }
+        return keywords;
+    }
+
     public List<Keyword> getCollocations(Language language, Map<String, Double> keyList) {
         List<Keyword> keywords = new ArrayList<Keyword>();
         int i = 0;
